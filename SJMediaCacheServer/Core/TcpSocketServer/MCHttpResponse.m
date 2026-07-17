@@ -13,7 +13,8 @@
 #import "MCPin.h"
 
 @interface MCHttpResponse ()<MCSProxyTaskDelegate>
-
+- (void)_finishResponse;
+- (void)_sendFinalData:(dispatch_data_t _Nullable)content;
 @end
 
 @implementation MCHttpResponse {
