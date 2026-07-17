@@ -423,15 +423,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Returns the hashed on-disk directory for an asset URL. The directory may not
 /// exist yet when the asset has never written any bytes.
-- (NSURL *)cacheAssetDirectoryURLForURL:(NSURL *)URL;
+- (NSURL *)cacheAssetDirectoryURLForURL:(NSURL *)URL NS_SWIFT_NAME(cacheAssetDirectoryURL(for:));
 
 /// Returns the number of bytes currently stored for an asset, including partial
 /// HLS playlists, keys, initialization maps and media segments.
-- (UInt64)countOfBytesCachedForURL:(NSURL *)URL;
+- (UInt64)countOfBytesCachedForURL:(NSURL *)URL NS_SWIFT_NAME(countOfBytesCached(for:));
 
 /// Returns YES as soon as an asset has any persisted data. Unlike
 /// `isFullyStoredAssetForURL:`, this also identifies partially cached playback.
-- (BOOL)hasCachedDataForURL:(NSURL *)URL;
+- (BOOL)hasCachedDataForURL:(NSURL *)URL NS_SWIFT_NAME(hasCachedData(for:));
 
 /// Removes the cache of the specified URL.
 ///
