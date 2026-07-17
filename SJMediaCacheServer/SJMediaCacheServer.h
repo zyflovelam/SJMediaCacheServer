@@ -296,6 +296,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// `resolveHLSResourceIdentifier`.
 @property (nonatomic, copy, nullable) NSURL *_Nullable (^resolveHLSResourceURL)(NSURL *playlistURL, NSURL *resourceURL);
 
+/// Refreshes an HLS child-resource URL immediately before a request is created
+/// from an existing proxy playlist. This lets cached playlists keep stable
+/// identities while the host replaces expired authorization query items.
+@property (nonatomic, copy, nullable) NSURL *_Nullable (^resolveHLSRequestURL)(NSURL *proxyURL, NSURL *resourceURL);
+
 /// A block that handles data encryption before it is written to the cache.
 /// This allows for custom encryption logic to be applied to the data
 /// before it is stored in the cache.

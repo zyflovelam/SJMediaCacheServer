@@ -42,6 +42,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Returning nil keeps the resolved child URL unchanged.
 @property (nonatomic, copy, nullable) NSURL *_Nullable (^resolveHLSResourceURL)(NSURL *playlistURL, NSURL *resourceURL);
 
+/// Allows the host application to refresh an HLS child-resource URL restored
+/// from an already cached proxy playlist. The proxy URL contains the asset's
+/// hashed path component, so the host can apply the latest short-lived
+/// authorization without rewriting or deleting cached media segments.
+@property (nonatomic, copy, nullable) NSURL *_Nullable (^resolveHLSRequestURL)(NSURL *proxyURL, NSURL *resourceURL);
+
 /// Generates a proxy URL from an original URL.
 ///
 /// If the original URL already contains PROXY_FLAG, it returns the original URL.

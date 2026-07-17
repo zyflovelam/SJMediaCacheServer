@@ -204,6 +204,14 @@
     return MCSURL.shared.resolveHLSResourceURL;
 }
 
+- (void)setResolveHLSRequestURL:(NSURL * _Nullable (^)(NSURL * _Nonnull, NSURL * _Nonnull))resolveHLSRequestURL {
+    MCSURL.shared.resolveHLSRequestURL = resolveHLSRequestURL;
+}
+
+- (NSURL * _Nullable (^)(NSURL * _Nonnull, NSURL * _Nonnull))resolveHLSRequestURL {
+    return MCSURL.shared.resolveHLSRequestURL;
+}
+
 - (void)setWriteDataEncryptor:(NSData * _Nonnull (^)(NSURLRequest * _Nonnull, NSUInteger, NSData * _Nonnull))writeDataEncryptor {
     MCSDownload.shared.receivedDataEncryptor = writeDataEncryptor;
 }

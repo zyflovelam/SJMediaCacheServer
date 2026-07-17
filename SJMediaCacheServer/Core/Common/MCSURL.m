@@ -75,7 +75,12 @@ MCSMD5(NSString *str) {
         for ( NSURLQueryItem *queryItem in components.queryItems ) {
             if ( [queryItem.name isEqualToString:@"url"] ) {
                 NSString *decodedURLString = [self decode:queryItem.value];
-                return [NSURL URLWithString:decodedURLString];
+                NSURL *restoredURL = [NSURL URLWithString:decodedURLString];
+                if ( restoredURL != nil && [path containsString:HLS_PROXY_URI_FLAG] && self.resolveHLSRequestURL != nil ) {
+                    NSURL *transformedURL = self.resolveHLSRequestURL(proxyURL, restoredURL);
+                    return transformedURL ?: restoredURL;
+                }
+                return restoredURL;
             }
         }
     }
