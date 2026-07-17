@@ -95,22 +95,48 @@
 }
 
 - (void)_closeConnectionWithError:(NSString * _Nullable)desc {
+    (void)desc;
+    if ( mHeaderHasSent || mSending ) {
+        [self _close];
+        return;
+    }
+
     NSMutableString *message = [NSMutableString.alloc init];
-    [message appendString:@"HTTP/1.1 500 Internal Server Error\r\n"];
+    [message appendString:@"HTTP/1.1 502 Bad Gateway\r\n"];
     [message appendString:@"Content-Length: 0\r\n"];
     [message appendString:@"Connection: close\r\n"];
-    if ( desc ) {
-        [message appendFormat:@"MC-Error-Message: %@\r\n", desc];
-    }
     [message appendString:@"\r\n"];
-    
+
+    mSending = YES;
     dispatch_data_t content = [mConnection createDataWithString:message];
     __weak typeof(self) _self = self;
-    [mConnection sendData:content context:NW_CONNECTION_DEFAULT_MESSAGE_CONTEXT isComplete:YES completion:^(nw_error_t  _Nullable error) {
+    [mConnection sendData:content context:NW_CONNECTION_FINAL_MESSAGE_CONTEXT isComplete:YES completion:^(nw_error_t  _Nullable error) {
         __strong typeof(_self) self = _self;
         if ( self == nil ) return;
-        [self _close];
+        if ( error ) {
+            [self _close];
+        }
+        else {
+            [self _finishResponse];
+        }
     }];
+}
+
+- (void)_finishResponse {
+    if ( mClosed ) {
+        return;
+    }
+
+    // NW_CONNECTION_FINAL_MESSAGE_CONTEXT has already sent TCP FIN. Releasing
+    // the response here keeps the successful write-close intact; cancelling the
+    // connection would turn a complete small HLS response into error -1005.
+    mClosed = YES;
+    if ( mTask ) {
+        [mTask close];
+        mTask = nil;
+    }
+    mConnection.onStateChange = nil;
+    mStrongSelf = nil;
 }
 
 - (void)_close {
@@ -180,7 +206,12 @@
 
 - (void)task:(id<MCSProxyTask>)task didAbortWithError:(nullable NSError *)error {
     dispatch_async(mConnection.queue, ^{
-        [self _close];
+        if ( !self->mHeaderHasSent && !self->mSending ) {
+            [self _closeConnectionWithError:nil];
+        }
+        else {
+            [self _close];
+        }
     });
 }
 
@@ -205,11 +236,13 @@
         NSMutableString *message = [NSMutableString.alloc init];
         // 206
         if ( response.range.length > 0 ) {
-            [message appendString:@"HTTP/1.1 206 OK\r\n"];
+            [message appendString:@"HTTP/1.1 206 Partial Content\r\n"];
             [message appendString:@"Server: localhost\r\n"];
             [message appendFormat:@"Content-Type: %@\r\n", response.contentType ?: @"application/octet-stream"];
             [message appendString:@"Accept-Ranges: bytes\r\n"];
             [message appendFormat:@"Content-Range: bytes %lu-%lu/%lu\r\n", response.range.location, NSMaxRange(response.range) - 1, response.totalLength];
+            [message appendFormat:@"Content-Length: %lu\r\n", response.range.length];
+            [message appendString:@"Connection: close\r\n"];
             [message appendString:@"\r\n"];
         }
         // 200
@@ -221,6 +254,7 @@
             if ( response.totalLength != NSUIntegerMax ) {
                 [message appendFormat:@"Content-Length: %lu\r\n", response.totalLength];
             }
+            [message appendString:@"Connection: close\r\n"];
             [message appendString:@"\r\n"];
         }
         dispatch_data_t content = [mConnection createDataWithString:message];
@@ -242,18 +276,38 @@
         // callback. Do not close before draining the reader: doing so aborts
         // the loopback response and AVPlayer reports NSURLErrorNetworkConnectionLost.
         if ( mTask.isDone ) {
-            [self _close];
+            [self _sendFinalData:nil];
         }
         return;
     }
-    
-    mSending = YES;
+
     dispatch_data_t content = [mConnection createData:data];
+    if ( mTask.isDone ) {
+        [self _sendFinalData:content];
+        return;
+    }
+
+    mSending = YES;
     __weak typeof(self) _self = self;
-    [mConnection sendData:content context:NW_CONNECTION_DEFAULT_MESSAGE_CONTEXT isComplete:mTask.isDone completion:^(nw_error_t  _Nullable error) {
+    [mConnection sendData:content context:NW_CONNECTION_DEFAULT_MESSAGE_CONTEXT isComplete:NO completion:^(nw_error_t  _Nullable error) {
         __strong typeof(_self) self = _self;
         if ( self == nil ) return;
         [self _onDataSendCompleteWithError:error];
+    }];
+}
+
+- (void)_sendFinalData:(dispatch_data_t _Nullable)content {
+    mSending = YES;
+    __weak typeof(self) _self = self;
+    [mConnection sendData:content context:NW_CONNECTION_FINAL_MESSAGE_CONTEXT isComplete:YES completion:^(nw_error_t  _Nullable error) {
+        __strong typeof(_self) self = _self;
+        if ( self == nil ) return;
+        if ( error ) {
+            [self _close];
+        }
+        else {
+            [self _finishResponse];
+        }
     }];
 }
 
@@ -270,13 +324,18 @@
 }
 
 - (void)_sendPinResponse {
-    NSString *message = @"HTTP/1.1 200 OK\r\n\r\n";
+    NSString *message = @"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
     dispatch_data_t content = [mConnection createDataWithString:message];
     __weak typeof(self) _self = self;
-    [mConnection sendData:content context:NW_CONNECTION_DEFAULT_MESSAGE_CONTEXT isComplete:YES completion:^(nw_error_t  _Nullable error) {
+    [mConnection sendData:content context:NW_CONNECTION_FINAL_MESSAGE_CONTEXT isComplete:YES completion:^(nw_error_t  _Nullable error) {
         __strong typeof(_self) self = _self;
         if ( self == nil ) return;
-        [self _close];
+        if ( error ) {
+            [self _close];
+        }
+        else {
+            [self _finishResponse];
+        }
     }];
 }
 @end
