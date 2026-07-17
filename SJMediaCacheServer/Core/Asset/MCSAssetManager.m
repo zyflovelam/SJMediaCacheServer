@@ -23,6 +23,11 @@
 
 #import "MCSError.h"
 #import "MCSRequest.h"
+#import <TargetConditionals.h>
+
+#if TARGET_OS_IOS
+#import <UIKit/UIKit.h>
+#endif
 
 @interface MCSAssetManager ()<MCSAssetReaderObserver, MCSAssetObserver> {
     NSUInteger mCountOfAllAssets;
@@ -54,7 +59,9 @@
         mAssets = NSMutableDictionary.dictionary;
         mUsageLogs = NSMutableDictionary.dictionary;
         [self _syncUsageLogsRecursively];
+#if TARGET_OS_IOS
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(_syncUsageLogs) name:UIApplicationWillTerminateNotification object:nil];
+#endif
     }
     return self;
 }

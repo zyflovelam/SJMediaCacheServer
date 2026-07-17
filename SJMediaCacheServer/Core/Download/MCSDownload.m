@@ -13,6 +13,11 @@
 #import "MCSLogger.h"
 #import "NSURLRequest+MCS.h"
 #import "MCSConsts.h"
+#import <TargetConditionals.h>
+
+#if TARGET_OS_IOS
+#import <UIKit/UIKit.h>
+#endif
 
 @interface NSURLSessionTask (MCSDownloadExtended)<MCSDownloadTask>
 
@@ -24,7 +29,9 @@
     NSURLSessionConfiguration *mSessionConfiguration;
     NSMutableDictionary<NSNumber *, NSError *> *mErrorDictionary;
     NSMutableDictionary<NSNumber *, id<MCSDownloadTaskDelegate>> *mDelegateDictionary;
+#if TARGET_OS_IOS
     UIBackgroundTaskIdentifier mBackgroundTaskIdentifier;
+#endif
     id<MCSDownloadResponse>  _Nullable (^mDefaultResponseHandler)(NSURLSessionTask *task, NSURLResponse * _Nonnull res);
 }
 @end
@@ -43,10 +50,13 @@
 - (instancetype)init {
     if (self = [super init]) {
         _timeoutInterval = 30.0f;
+#if TARGET_OS_IOS
         mBackgroundTaskIdentifier = UIBackgroundTaskInvalid;
+#endif
         mErrorDictionary = [NSMutableDictionary dictionary];
         mDelegateDictionary = [NSMutableDictionary dictionary];
         
+#if TARGET_OS_IOS
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(applicationDidEnterBackground:)
                                                      name:UIApplicationDidEnterBackgroundNotification
@@ -55,6 +65,7 @@
                                                  selector:@selector(applicationWillEnterForeground:)
                                                      name:UIApplicationWillEnterForegroundNotification
                                                    object:[UIApplication sharedApplication]];
+#endif
         
         mDefaultResponseHandler = ^id<MCSDownloadResponse> _Nullable (NSURLSessionTask *task, NSURLResponse *response) {
             if ( ![response isKindOfClass:NSHTTPURLResponse.class] ) return nil;
@@ -198,6 +209,7 @@
 #pragma mark - Background Task
 
 - (void)applicationDidEnterBackground:(NSNotification *)notification {
+#if TARGET_OS_IOS
     // begin background task
     if ( mBackgroundTaskIdentifier != UIBackgroundTaskInvalid ) {
         mBackgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
@@ -205,14 +217,17 @@
             self->mBackgroundTaskIdentifier = UIBackgroundTaskInvalid;
         }];
     }
+#endif
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)notification {
+#if TARGET_OS_IOS
     // end background task
     if ( mBackgroundTaskIdentifier != UIBackgroundTaskInvalid ) {
         [UIApplication.sharedApplication endBackgroundTask:mBackgroundTaskIdentifier];
         mBackgroundTaskIdentifier = UIBackgroundTaskInvalid;
     }
+#endif
 }
 @end
 

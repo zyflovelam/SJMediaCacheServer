@@ -6,9 +6,12 @@
 //
 
 #import "MCSMimeType.h"
-#import "MCSResources.h"
+#import <TargetConditionals.h>
+
+#if TARGET_OS_IOS
 #import <MobileCoreServices/MobileCoreServices.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif
 
 FOUNDATION_EXPORT NSString *
 MCSMimeTypeFromFileAtPath(NSString *path) {
@@ -19,6 +22,7 @@ FOUNDATION_EXPORT NSString *
 MCSMimeType(NSString *filenameExtension) {
     if ( filenameExtension == nil ) filenameExtension = @"";
     NSString *mimeType = nil;
+#if TARGET_OS_IOS
     if ( @available(iOS 14.0, *) ) {
         UTType *type = [UTType typeWithFilenameExtension:filenameExtension];
         mimeType = [type preferredMIMEType];
@@ -31,20 +35,23 @@ MCSMimeType(NSString *filenameExtension) {
             if ( ref != NULL ) mimeType = (__bridge_transfer NSString *)ref;
         }
     }
+#endif
     
     if ( mimeType == nil ) {
         static NSDictionary<NSString *, NSString *> *commonMimeTypes;
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            NSString *path = [MCSResources filePathWithFilename:@"common_mime_types.json"];
-            NSData *data = [NSData dataWithContentsOfFile:path];
-            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:NULL];
-            NSMutableDictionary<NSString *, NSString *> *m = NSMutableDictionary.dictionary;
-            m[@"default_mime_type"] = json[@"default"] ?: @"application/octet-stream";
-            [(NSArray<NSDictionary<NSString *, NSString *> *> *)json[@"list"] enumerateObjectsUsingBlock:^(NSDictionary<NSString *, NSString *> * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                m[obj[@"extension"]] = obj[@"mime_type"];
-            }];
-            commonMimeTypes = m.copy;
+            commonMimeTypes = @{
+                @"m3u8": @"application/vnd.apple.mpegurl",
+                @"ts": @"video/mp2t",
+                @"m4s": @"video/iso.segment",
+                @"mp4": @"video/mp4",
+                @"m4a": @"audio/mp4",
+                @"aac": @"audio/aac",
+                @"vtt": @"text/vtt",
+                @"key": @"application/octet-stream",
+                @"default_mime_type": @"application/octet-stream"
+            };
         });
         // 如果没有找到对应的MIME类型，返回默认类型
         mimeType = commonMimeTypes[filenameExtension] ?: commonMimeTypes[@"default_mime_type"];

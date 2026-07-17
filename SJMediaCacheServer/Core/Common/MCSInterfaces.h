@@ -9,7 +9,7 @@
 #ifndef MCSInterfaces_h
 #define MCSInterfaces_h
 #import <Foundation/Foundation.h>
-#import <SJUIKit/SJSQLiteTableModelProtocol.h>
+#import <SJSQLite3/SJSQLiteTableModelProtocol.h>
 #import "MCSDefines.h"
 #import "NSURLRequest+MCS.h"
 

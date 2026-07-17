@@ -11,17 +11,17 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "MCSPrefetcherDefines.h"
-#import "MCSExporterDefines.h"
-#import "MCSDefines.h"
+#import "Core/Prefetch/MCSPrefetcherDefines.h"
+#import "Core/Export/MCSExporterDefines.h"
+#import "Core/Common/MCSDefines.h"
 
 NS_ASSUME_NONNULL_BEGIN
 @interface SJMediaCacheServer : NSObject
 + (instancetype)shared;
 
-/// Enable AirPlay support by using device's actual IP address instead of localhost
-/// This property allows the media cache server to be accessible from external devices
-/// such as Apple TV for AirPlay streaming. Default is YES.
+/// Retained only for source compatibility. This hardened fork always binds to
+/// loopback and ignores attempts to enable AirPlay, so media is never exposed
+/// to other devices on the local network.
 @property (nonatomic) BOOL enableAirPlaySupport;
 
 /// Convert the given URL to a proxy playback URL.
@@ -339,7 +339,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Specifies the logging options to determine which components should log their activities.
 ///
-/// The default value is MCSLogOptionDefault, which includes ProxyTask, Prefetcher, and Heartbeat logs.
+/// The default value is 0, which disables the library's internal logs.
 /// You can combine multiple options using the bitwise OR operator to enable logs from multiple components.
 ///
 /// @note Use `MCSLogOptionAll` to enable logs from all components.
