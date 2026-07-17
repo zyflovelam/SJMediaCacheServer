@@ -286,15 +286,25 @@ static NSString *const HLS_CTX_LAST_INIT_END = @"HLS_CTX_LAST_INIT_END";
 }
 
 - (NSString *)hls_restoreOriginalUrl:(NSURL *)resourceURL {
+    NSURL *resolvedURL = nil;
     if ( [self containsString:@"://"] ) {
         NSString *loopback = @"http://127.0.0.1";
         if ( [self hasPrefix:loopback] ) {
-            return [NSURL URLWithString:[self substringFromIndex:loopback.length] relativeToURL:resourceURL].absoluteString;
+            resolvedURL = [NSURL URLWithString:[self substringFromIndex:loopback.length] relativeToURL:resourceURL].absoluteURL;
         }
-
-        return self;
+        else {
+            resolvedURL = [NSURL URLWithString:self];
+        }
     }
-    return [NSURL URLWithString:self relativeToURL:resourceURL].absoluteString;
+    else {
+        resolvedURL = [NSURL URLWithString:self relativeToURL:resourceURL].absoluteURL;
+    }
+
+    if ( resolvedURL == nil ) return self;
+    NSURL *transformedURL = MCSURL.shared.resolveHLSResourceURL != nil
+        ? MCSURL.shared.resolveHLSResourceURL(resourceURL, resolvedURL)
+        : nil;
+    return (transformedURL ?: resolvedURL).absoluteString;
 }
 @end
 

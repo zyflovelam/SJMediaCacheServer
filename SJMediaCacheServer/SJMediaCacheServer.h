@@ -289,6 +289,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// without changing the request URL used to fetch the resource.
 @property (nonatomic, copy, nullable) NSString *(^resolveHLSResourceIdentifier)(NSURL *URL);
 
+/// Transforms an absolute HLS child-resource URL before the proxy requests it.
+/// Use this to propagate short-lived authorization query items from a playlist
+/// URL to relative child playlists, media segments, initialization maps or
+/// keys. Cache identity remains controlled independently by
+/// `resolveHLSResourceIdentifier`.
+@property (nonatomic, copy, nullable) NSURL *_Nullable (^resolveHLSResourceURL)(NSURL *playlistURL, NSURL *resourceURL);
+
 /// A block that handles data encryption before it is written to the cache.
 /// This allows for custom encryption logic to be applied to the data
 /// before it is stored in the cache.
@@ -409,6 +416,22 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @return The total size, in bytes, of all removable cached assets.
 @property (nonatomic, readonly) UInt64 countOfBytesAllCaches; // 可被删除的缓存所占用的大小
+
+/// The on-disk root directory used by the cache server. The directory contains
+/// `mcs.db` and one hashed subdirectory per media asset.
+@property (nonatomic, copy, readonly) NSURL *cacheRootURL;
+
+/// Returns the hashed on-disk directory for an asset URL. The directory may not
+/// exist yet when the asset has never written any bytes.
+- (NSURL *)cacheAssetDirectoryURLForURL:(NSURL *)URL;
+
+/// Returns the number of bytes currently stored for an asset, including partial
+/// HLS playlists, keys, initialization maps and media segments.
+- (UInt64)countOfBytesCachedForURL:(NSURL *)URL;
+
+/// Returns YES as soon as an asset has any persisted data. Unlike
+/// `isFullyStoredAssetForURL:`, this also identifies partially cached playback.
+- (BOOL)hasCachedDataForURL:(NSURL *)URL;
 
 /// Removes the cache of the specified URL.
 ///

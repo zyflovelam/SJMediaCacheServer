@@ -18,6 +18,8 @@
 #import "MCSDownload.h"
 #import "MCSPrefetcherManager.h"
 #import "MCSNetworkUtils.h"
+#import "MCSRootDirectory.h"
+#import "NSFileManager+MCS.h"
 
 @interface SJMediaCacheServer () {
     MCTcpSocketServer *_server;
@@ -194,6 +196,14 @@
     return MCSURL.shared.resolveHLSResourceIdentifier;
 }
 
+- (void)setResolveHLSResourceURL:(NSURL * _Nullable (^)(NSURL * _Nonnull, NSURL * _Nonnull))resolveHLSResourceURL {
+    MCSURL.shared.resolveHLSResourceURL = resolveHLSResourceURL;
+}
+
+- (NSURL * _Nullable (^)(NSURL * _Nonnull, NSURL * _Nonnull))resolveHLSResourceURL {
+    return MCSURL.shared.resolveHLSResourceURL;
+}
+
 - (void)setWriteDataEncryptor:(NSData * _Nonnull (^)(NSURLRequest * _Nonnull, NSUInteger, NSData * _Nonnull))writeDataEncryptor {
     MCSDownload.shared.receivedDataEncryptor = writeDataEncryptor;
 }
@@ -277,6 +287,25 @@
 
 - (UInt64)countOfBytesAllCaches {
     return MCSCacheManager.shared.countOfBytesUnprotectedCaches;
+}
+
+- (NSURL *)cacheRootURL {
+    return [NSURL fileURLWithPath:MCSRootDirectory.path isDirectory:YES];
+}
+
+- (NSURL *)cacheAssetDirectoryURLForURL:(NSURL *)URL {
+    NSString *assetName = [MCSURL.shared assetNameForURL:URL];
+    NSString *path = [MCSRootDirectory assetPathForFilename:assetName];
+    return [NSURL fileURLWithPath:path isDirectory:YES];
+}
+
+- (UInt64)countOfBytesCachedForURL:(NSURL *)URL {
+    NSURL *directoryURL = [self cacheAssetDirectoryURLForURL:URL];
+    return [NSFileManager.defaultManager mcs_directorySizeAtPath:directoryURL.path];
+}
+
+- (BOOL)hasCachedDataForURL:(NSURL *)URL {
+    return [self countOfBytesCachedForURL:URL] > 0;
 }
 
 - (BOOL)isFullyStoredAssetForURL:(NSURL *)URL {

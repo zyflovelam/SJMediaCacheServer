@@ -32,6 +32,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// path and functional query parameters.
 @property (nonatomic, copy, nullable) NSString *(^resolveHLSResourceIdentifier)(NSURL *URL);
 
+/// Allows the host application to transform a resolved HLS child-resource URL
+/// before it is requested. This is useful when a master playlist carries a
+/// short-lived authorization query item that relative playlists, segments,
+/// initialization maps or keys also require.
+///
+/// The first argument is the URL of the playlist containing the child URI. The
+/// second argument is the absolute child URL resolved according to RFC 3986.
+/// Returning nil keeps the resolved child URL unchanged.
+@property (nonatomic, copy, nullable) NSURL *_Nullable (^resolveHLSResourceURL)(NSURL *playlistURL, NSURL *resourceURL);
+
 /// Generates a proxy URL from an original URL.
 ///
 /// If the original URL already contains PROXY_FLAG, it returns the original URL.
