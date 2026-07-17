@@ -38,7 +38,7 @@
 - (instancetype)init {
     self = [super init];
     if ( self ) {
-        _enableAirPlaySupport = YES; // Default to enabled
+        _enableAirPlaySupport = NO;
         _server = [MCTcpSocketServer.alloc init];
         _server.onConnect = ^(MCTcpSocketConnection * _Nonnull connection) {
             [MCHttpResponse processConnection:connection];
@@ -59,9 +59,7 @@
         };
 
         self.resolveAssetIdentifier = ^NSString * _Nonnull(NSURL * _Nonnull URL) {
-            NSURLComponents *components = [NSURLComponents componentsWithURL:URL resolvingAgainstBaseURL:NO];
-            components.query = nil; // ignore query parameters for identifier purposes
-            return components.URL.absoluteString;
+            return URL.absoluteString;
         };
     }
     return self;
@@ -80,11 +78,11 @@
 }
 
 - (BOOL)enableAirPlaySupport {
-    return _enableAirPlaySupport;
+    return NO;
 }
 
 - (void)setEnableAirPlaySupport:(BOOL)enableAirPlaySupport {
-    _enableAirPlaySupport = enableAirPlaySupport;
+    _enableAirPlaySupport = NO;
 }
 
 @end

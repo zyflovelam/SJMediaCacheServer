@@ -13,7 +13,8 @@ static NSString *mcs_path;
 + (void)initialize {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        mcs_path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:@"com.SJMediaCacheServer.cache"];
+        NSString *cachesPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).lastObject;
+        mcs_path = [[cachesPath stringByAppendingPathComponent:@"DramaMore"] stringByAppendingPathComponent:@"StreamingMediaCache"];
         [NSFileManager.defaultManager mcs_createDirectoryAtPath:mcs_path backupable:NO];
     });
 }

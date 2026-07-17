@@ -7,7 +7,7 @@
 //
 
 #import "MCSLogger.h"
-#import <SJUIKit/SJSQLite3Logger.h>
+#import <SJSQLite3/SJSQLite3Logger.h>
 #import <stdarg.h>
 
 @implementation MCSLogger
@@ -23,7 +23,7 @@
 - (instancetype)init {
     self = [super init];
     if ( self ) {
-        _options = MCSLogOptionDefault;
+        _options = 0;
     }
     return self;
 }

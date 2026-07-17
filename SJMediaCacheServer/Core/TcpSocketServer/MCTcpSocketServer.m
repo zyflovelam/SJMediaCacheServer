@@ -228,15 +228,7 @@ static NSString *MCErrorLogsFilePath;
 
     nw_parameters_t parameters = nw_parameters_create_secure_tcp(NW_PARAMETERS_DISABLE_PROTOCOL, NW_PARAMETERS_DEFAULT_CONFIGURATION);
 
-    // Get device IP address for AirPlay support
-    NSString *deviceIP = @"127.0.0.1"; // Default to localhost
-    // For AirPlay support, we need to use the device's actual IP address
-    NSString *localIP = [MCSNetworkUtils getLocalIPAddress];
-    if (localIP) {
-        deviceIP = localIP;
-    }
-
-    nw_endpoint_t endpoint = nw_endpoint_create_host(deviceIP.UTF8String, port_str);
+    nw_endpoint_t endpoint = nw_endpoint_create_host("127.0.0.1", port_str);
     nw_parameters_set_local_endpoint(parameters, endpoint);
     nw_listener_t listener = nw_listener_create(parameters);
     nw_listener_set_queue(listener, mServerQueue);
