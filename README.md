@@ -5,6 +5,32 @@
 The design of SJMediaCacheServer effectively reduces the number of network requests by serving cached content, thereby improving the playback experience for remote media resources whenever possible.
 
 ## Installation
+### Swift Package Manager
+
+This fork exposes an iOS 16+ Swift Package. Add the private repository URL in
+Xcode and import `SJMediaCacheServer`. The package includes only the SQLite3
+portion of the upstream `SJUIKit` dependency.
+
+Before generating any proxy URL, configure a stable asset identifier. Do not
+use a signed playback URL, token, or arbitrary query string as a cache key.
+
+```objc
+SJMediaCacheServer *server = SJMediaCacheServer.shared;
+server.resolveAssetIdentifier = ^NSString *(NSURL *URL) {
+    return [NSString stringWithFormat:@"episode:%@/asset:%@/version:%@/quality:%@",
+            episodeID, assetID, assetVersion, quality];
+};
+server.cacheMaxDiskSize = 256 * 1024 * 1024;
+server.cacheReservedFreeDiskSpace = 1024 * 1024 * 1024;
+```
+
+This fork always listens on `127.0.0.1`, uses
+`Library/Caches/DramaMore/StreamingMediaCache`, and disables internal console
+logs by default. It must not be used as a replacement for protected member
+offline downloads.
+
+### CocoaPods
+
 ```ruby
 pod 'SJUIKit/SQLite3', :podspec => 'https://gitee.com/changsanjiang/SJUIKit/raw/master/SJUIKit-YYModel.podspec'
 pod 'SJMediaCacheServer'
