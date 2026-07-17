@@ -180,7 +180,11 @@ MCSMD5(NSString *str) {
 }
 
 - (NSString *)generateProxyIdentifierFromHLSOriginalURL:(NSURL *)url {
-    return MCSMD5(url.absoluteString);
+    NSString *identifier = self.resolveHLSResourceIdentifier != nil
+        ? self.resolveHLSResourceIdentifier(url)
+        : url.absoluteString;
+    NSParameterAssert(identifier);
+    return MCSMD5(identifier);
 }
 
 /// The proxyIdentifier format is: urlmd5_range.location_range.length.extension

@@ -284,6 +284,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// \endcode
 @property (nonatomic, copy, nullable) NSString *(^resolveAssetIdentifier)(NSURL *URL);
 
+/// Resolves a stable cache identity for HLS child resources. Use this to
+/// exclude short-lived authorization query parameters from segment identifiers
+/// without changing the request URL used to fetch the resource.
+@property (nonatomic, copy, nullable) NSString *(^resolveHLSResourceIdentifier)(NSURL *URL);
+
 /// A block that handles data encryption before it is written to the cache.
 /// This allows for custom encryption logic to be applied to the data
 /// before it is stored in the cache.

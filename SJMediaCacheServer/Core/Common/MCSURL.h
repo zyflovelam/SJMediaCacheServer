@@ -26,6 +26,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// If not set, the default behavior for resolving asset identifiers should be used.
 @property (nonatomic, copy, nullable) NSString *(^resolveAssetIdentifier)(NSURL *URL);
 
+/// Resolves a stable identity for HLS child resources such as playlists,
+/// media segments, AES keys and initialization maps. Hosts can remove
+/// temporary authorization query parameters while retaining resource-specific
+/// path and functional query parameters.
+@property (nonatomic, copy, nullable) NSString *(^resolveHLSResourceIdentifier)(NSURL *URL);
+
 /// Generates a proxy URL from an original URL.
 ///
 /// If the original URL already contains PROXY_FLAG, it returns the original URL.

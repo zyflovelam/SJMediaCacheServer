@@ -20,6 +20,11 @@ server.resolveAssetIdentifier = ^NSString *(NSURL *URL) {
     return [NSString stringWithFormat:@"episode:%@/asset:%@/version:%@/quality:%@",
             episodeID, assetID, assetVersion, quality];
 };
+server.resolveHLSResourceIdentifier = ^NSString *(NSURL *URL) {
+    NSURLComponents *components = [NSURLComponents componentsWithURL:URL resolvingAgainstBaseURL:NO];
+    components.query = nil; // Example only: remove transient authorization parameters.
+    return components.URL.absoluteString;
+};
 server.cacheMaxDiskSize = 256 * 1024 * 1024;
 server.cacheReservedFreeDiskSpace = 1024 * 1024 * 1024;
 ```

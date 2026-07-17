@@ -194,6 +194,14 @@
     return MCSURL.shared.resolveAssetIdentifier;
 }
 
+- (void)setResolveHLSResourceIdentifier:(NSString * _Nonnull (^)(NSURL * _Nonnull))resolveHLSResourceIdentifier {
+    MCSURL.shared.resolveHLSResourceIdentifier = resolveHLSResourceIdentifier;
+}
+
+- (NSString * _Nonnull (^)(NSURL * _Nonnull))resolveHLSResourceIdentifier {
+    return MCSURL.shared.resolveHLSResourceIdentifier;
+}
+
 - (void)setWriteDataEncryptor:(NSData * _Nonnull (^)(NSURLRequest * _Nonnull, NSUInteger, NSData * _Nonnull))writeDataEncryptor {
     MCSDownload.shared.receivedDataEncryptor = writeDataEncryptor;
 }
