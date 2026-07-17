@@ -203,6 +203,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// \endcode
 @property (nonatomic, copy, nullable) void (^requestHandler)(NSMutableURLRequest *request);
 
+/// Reports sanitized diagnostics for requests handled by the loopback proxy,
+/// including responses served entirely from disk cache. The callback never
+/// contains a URL, request headers, or response body.
+@property (nonatomic, copy, nullable) void (^proxyTaskHandler)(BOOL isStart,
+                                                                   NSString *resourceType,
+                                                                   NSInteger statusCode,
+                                                                   int64_t responseByteCount,
+                                                                   NSError *_Nullable error);
+
 /// Configures a custom HTTP header field for a specified asset URL, targeting specific data types
 /// such as AES keys or segment files in an HLS playlist.
 ///

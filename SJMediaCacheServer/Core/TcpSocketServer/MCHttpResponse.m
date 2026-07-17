@@ -11,10 +11,13 @@
 #import "MCHttpRequest.h"
 #import "MCHttpRequestRange.h"
 #import "MCPin.h"
+#import "MCSMimeType.h"
 
 @interface MCHttpResponse ()<MCSProxyTaskDelegate>
 - (void)_finishResponse;
 - (void)_sendFinalData:(dispatch_data_t _Nullable)content;
+- (NSString *)_resourceTypeForPathExtension:(NSString *)pathExtension;
+- (void)_reportProxyTaskCompletionWithError:(NSError *_Nullable)error;
 @end
 
 @implementation MCHttpResponse {
@@ -24,6 +27,12 @@
     BOOL mHeaderHasSent;
     BOOL mSending;
     BOOL mClosed;
+    BOOL mProxyTaskStarted;
+    BOOL mProxyTaskFinished;
+    NSInteger mResponseStatusCode;
+    int64_t mResponseByteCount;
+    NSString *mResourceType;
+    NSString *mRequestPathExtension;
 }
 
 + (void)processConnection:(MCTcpSocketConnection *)connection {
@@ -136,6 +145,7 @@
         [mTask close];
         mTask = nil;
     }
+    [self _reportProxyTaskCompletionWithError:nil];
     mConnection.onStateChange = nil;
     mStrongSelf = nil;
 }
@@ -179,6 +189,12 @@
     NSString *target = req.requestTarget;
     NSString *url = [NSString stringWithFormat:@"http://%@%@", host, target];
     NSMutableURLRequest *proxyRequest = [NSMutableURLRequest.alloc initWithURL:[NSURL URLWithString:url]];
+    mRequestPathExtension = proxyRequest.URL.path.pathExtension.lowercaseString;
+    mResourceType = [self _resourceTypeForPathExtension:mRequestPathExtension];
+    mProxyTaskStarted = YES;
+    if ( MCSProxyTask.eventHandler != nil ) {
+        MCSProxyTask.eventHandler(YES, mResourceType, 0, 0, nil);
+    }
     
     NSMutableDictionary<NSString *, NSString *> *headers = [req.headers mutableCopy];
     [headers removeObjectForKey:@"Host"];
@@ -207,6 +223,7 @@
 
 - (void)task:(id<MCSProxyTask>)task didAbortWithError:(nullable NSError *)error {
     dispatch_async(mConnection.queue, ^{
+        [self _reportProxyTaskCompletionWithError:error];
         if ( !self->mHeaderHasSent && !self->mSending ) {
             [self _closeConnectionWithError:nil];
         }
@@ -234,12 +251,20 @@
         
         mSending = YES;
         id<MCSResponse> response = mTask.response;
+        BOOL isPartialResponse = response.totalLength != NSUIntegerMax &&
+            (response.range.location != 0 || response.range.length < response.totalLength);
+        mResponseStatusCode = isPartialResponse ? 206 : 200;
+        mResponseByteCount = response.range.length <= INT64_MAX ? (int64_t)response.range.length : 0;
+        NSString *contentType = response.contentType;
+        if ( contentType.length == 0 || [contentType isEqualToString:@"application/octet-stream"] ) {
+            contentType = MCSMimeType(mRequestPathExtension);
+        }
         NSMutableString *message = [NSMutableString.alloc init];
         // 206
-        if ( response.range.length > 0 ) {
+        if ( isPartialResponse ) {
             [message appendString:@"HTTP/1.1 206 Partial Content\r\n"];
             [message appendString:@"Server: localhost\r\n"];
-            [message appendFormat:@"Content-Type: %@\r\n", response.contentType ?: @"application/octet-stream"];
+            [message appendFormat:@"Content-Type: %@\r\n", contentType ?: @"application/octet-stream"];
             [message appendString:@"Accept-Ranges: bytes\r\n"];
             [message appendFormat:@"Content-Range: bytes %lu-%lu/%lu\r\n", response.range.location, NSMaxRange(response.range) - 1, response.totalLength];
             [message appendFormat:@"Content-Length: %lu\r\n", response.range.length];
@@ -250,7 +275,7 @@
         else {
             [message appendString:@"HTTP/1.1 200 OK\r\n"];
             [message appendString:@"Server: localhost\r\n"];
-            [message appendFormat:@"Content-Type: %@\r\n", response.contentType ?: @"application/octet-stream"];
+            [message appendFormat:@"Content-Type: %@\r\n", contentType ?: @"application/octet-stream"];
             [message appendString:@"Accept-Ranges: bytes\r\n"];
             if ( response.totalLength != NSUIntegerMax ) {
                 [message appendFormat:@"Content-Length: %lu\r\n", response.totalLength];
@@ -322,6 +347,23 @@
         self->mSending = NO;
         [self _onDataSendable];
     });
+}
+
+- (NSString *)_resourceTypeForPathExtension:(NSString *)pathExtension {
+    if ( [pathExtension isEqualToString:@"m3u8"] ) return @"playlist";
+    if ( [pathExtension isEqualToString:@"ts"] || [pathExtension isEqualToString:@"m4s"] ) return @"media";
+    if ( [pathExtension isEqualToString:@"init"] || [pathExtension isEqualToString:@"mp4"] ) return @"initialization";
+    if ( [pathExtension isEqualToString:@"key"] ) return @"key";
+    if ( [pathExtension isEqualToString:@"vtt"] ) return @"subtitle";
+    return @"other";
+}
+
+- (void)_reportProxyTaskCompletionWithError:(NSError *_Nullable)error {
+    if ( !mProxyTaskStarted || mProxyTaskFinished ) return;
+    mProxyTaskFinished = YES;
+    if ( MCSProxyTask.eventHandler != nil ) {
+        MCSProxyTask.eventHandler(NO, mResourceType ?: @"other", mResponseStatusCode, mResponseByteCount, error);
+    }
 }
 
 - (void)_sendPinResponse {

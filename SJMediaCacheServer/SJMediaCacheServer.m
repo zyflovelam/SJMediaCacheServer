@@ -147,6 +147,14 @@
     return MCSDownload.shared.requestHandler;
 }
 
+- (void)setProxyTaskHandler:(void (^_Nullable)(BOOL, NSString * _Nonnull, NSInteger, int64_t, NSError * _Nullable))proxyTaskHandler {
+    MCSProxyTask.eventHandler = proxyTaskHandler;
+}
+
+- (void (^_Nullable)(BOOL, NSString * _Nonnull, NSInteger, int64_t, NSError * _Nullable))proxyTaskHandler {
+    return MCSProxyTask.eventHandler;
+}
+
 - (void)setHTTPHeaderField:(NSString *)field withValue:(nullable NSString *)value forAssetURL:(NSURL *)URL ofType:(MCSDataType)type {
     if ( URL != nil && field != nil ) {
         id<MCSAsset> asset = [MCSAssetManager.shared assetWithURL:URL];

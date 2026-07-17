@@ -13,6 +13,8 @@
 #import "NSURLRequest+MCS.h"
 #import "MCSURL.h"
 
+static void (^mEventHandler)(BOOL, NSString *, NSInteger, int64_t, NSError *_Nullable);
+
 @interface MCSProxyTask ()<MCSAssetReaderDelegate> 
 @property (nonatomic, weak) id<MCSProxyTaskDelegate> delegate;
 @property (nonatomic, strong) NSURLRequest * request;
@@ -24,6 +26,14 @@
 @end
 
 @implementation MCSProxyTask
++ (void)setEventHandler:(void (^_Nullable)(BOOL, NSString *, NSInteger, int64_t, NSError *_Nullable))eventHandler {
+    mEventHandler = [eventHandler copy];
+}
+
++ (void (^_Nullable)(BOOL, NSString *, NSInteger, int64_t, NSError *_Nullable))eventHandler {
+    return mEventHandler;
+}
+
 - (instancetype)initWithRequest:(NSURLRequest *)request delegate:(id<MCSProxyTaskDelegate>)delegate {
     NSParameterAssert(request.URL.absoluteString.length != 0);
     self = [super init];

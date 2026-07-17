@@ -11,6 +11,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MCSProxyTask : NSObject<MCSProxyTask>
+@property (class, nonatomic, copy, nullable) void (^eventHandler)(BOOL isStart,
+                                                                      NSString *resourceType,
+                                                                      NSInteger statusCode,
+                                                                      int64_t responseByteCount,
+                                                                      NSError *_Nullable error);
+
 - (instancetype)initWithRequest:(NSURLRequest *)request delegate:(id<MCSProxyTaskDelegate>)delegate;
 
 - (void)prepare;
