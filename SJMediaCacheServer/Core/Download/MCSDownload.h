@@ -18,6 +18,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, null_resettable) id<MCSDownloadResponse> _Nullable(^responseHandler)(NSURLSessionTask *task, NSURLResponse *res);
 @property (nonatomic, copy, nullable) NSData *(^receivedDataEncryptor)(NSURLRequest *request, NSUInteger offset, NSData *data);
 @property (nonatomic, copy, nullable) void (^metricsHandler)(NSURLSession *session, NSURLSessionTask *task, NSURLSessionTaskMetrics *metrics);
+/// Reports a sanitized remote-request lifecycle without exposing URLs, query
+/// parameters, headers or credentials. `isStart` is YES before the task is
+/// resumed and NO when it completes.
+@property (nonatomic, copy, nullable) void (^networkTaskHandler)(BOOL isStart,
+                                                                    NSString *resourceType,
+                                                                    NSInteger statusCode,
+                                                                    int64_t receivedByteCount,
+                                                                    NSError *_Nullable error);
 @property (nonatomic) NSTimeInterval timeoutInterval; // default value is 30s;
 
 - (nullable id<MCSDownloadTask>)downloadWithRequest:(NSURLRequest *)request priority:(float)priority delegate:(id<MCSDownloadTaskDelegate>)delegate;

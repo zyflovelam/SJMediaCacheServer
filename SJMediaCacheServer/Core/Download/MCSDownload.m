@@ -23,6 +23,25 @@
 
 @end
 
+static NSString *MCSNetworkResourceType(NSURLRequest *request) {
+    NSString *extension = request.URL.pathExtension.lowercaseString;
+    if ( [extension isEqualToString:@"m3u8"] ) return @"playlist";
+    if ( [extension isEqualToString:@"ts"] ||
+         [extension isEqualToString:@"m4s"] ||
+         [extension isEqualToString:@"mp4"] ||
+         [extension isEqualToString:@"aac"] ) return @"mediaSegment";
+    if ( [extension isEqualToString:@"key"] ) return @"key";
+    if ( [extension isEqualToString:@"vtt"] ||
+         [extension isEqualToString:@"srt"] ) return @"subtitles";
+    return @"resource";
+}
+
+static NSInteger MCSNetworkStatusCode(NSURLResponse *response) {
+    return [response isKindOfClass:NSHTTPURLResponse.class]
+        ? ((NSHTTPURLResponse *)response).statusCode
+        : 0;
+}
+
 @interface MCSDownload () <NSURLSessionDataDelegate> {
     NSURLSession *mSession;
     NSOperationQueue *mSessionDelegateQueue;
@@ -131,8 +150,13 @@
     NSURLSessionTask *task = [mSession dataTaskWithRequest:req];
     @synchronized (self) { mDelegateDictionary[@(task.taskIdentifier)] = delegate; }
     task.priority = priority;
+
+    __auto_type networkTaskHandler = _networkTaskHandler;
+    if ( networkTaskHandler != nil ) {
+        networkTaskHandler(YES, MCSNetworkResourceType(req), 0, 0, nil);
+    }
     [task resume];
-    
+
     MCSDownloaderDebugLog(@"%@: <%p>.downloadWithRequest { task: %lu, request: %@ };\n", NSStringFromClass(self.class), self, (unsigned long)task.taskIdentifier, [req mcs_description]);
     return task;
 }
@@ -201,6 +225,15 @@
         
         mDelegateDictionary[key] = nil;
         mErrorDictionary[key] = nil;
+    }
+
+    __auto_type networkTaskHandler = _networkTaskHandler;
+    if ( networkTaskHandler != nil ) {
+        networkTaskHandler(NO,
+                           MCSNetworkResourceType(task.currentRequest ?: task.originalRequest),
+                           MCSNetworkStatusCode(task.response),
+                           task.countOfBytesReceived,
+                           error);
     }
     
     [delegate downloadTask:task didCompleteWithError:error];

@@ -247,6 +247,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// };
 /// \endcode
 @property (nonatomic, copy, nullable) void (^metricsHandler)(NSURLSession *session, NSURLSessionTask *task, NSURLSessionTaskMetrics *metrics);
+
+/// Reports sanitized remote-request diagnostics. The callback never contains
+/// URLs, query parameters, headers or credentials. `isStart` is YES immediately
+/// before a remote task starts and NO when it completes. `statusCode` is zero
+/// when no HTTP response was received.
+@property (nonatomic, copy, nullable) void (^networkTaskHandler)(BOOL isStart,
+                                                                    NSString *resourceType,
+                                                                    NSInteger statusCode,
+                                                                    int64_t receivedByteCount,
+                                                                    NSError *_Nullable error);
 @end
 
 @interface SJMediaCacheServer (Convert)

@@ -168,6 +168,14 @@
 - (void (^_Nullable)(NSURLSession * _Nonnull, NSURLSessionTask * _Nonnull, NSURLSessionTaskMetrics * _Nonnull))metricsHandler {
     return MCSDownload.shared.metricsHandler;
 }
+
+- (void)setNetworkTaskHandler:(void (^_Nullable)(BOOL, NSString * _Nonnull, NSInteger, int64_t, NSError * _Nullable))networkTaskHandler {
+    MCSDownload.shared.networkTaskHandler = networkTaskHandler;
+}
+
+- (void (^_Nullable)(BOOL, NSString * _Nonnull, NSInteger, int64_t, NSError * _Nullable))networkTaskHandler {
+    return MCSDownload.shared.networkTaskHandler;
+}
 @end
 
 
