@@ -191,11 +191,6 @@
         return;
     }
     
-    if ( mTask.isDone ) {
-        [self _close];
-        return;
-    }
-    
     if ( mTask.isAborted ) {
         return;
     }
@@ -241,7 +236,14 @@
     }
     
     NSData *data = [mTask readDataOfLength:8 * 1024];
-    if ( data == NULL ) {
+    if ( data.length == 0 ) {
+        // A small HLS resource (for example an EXT-X-MAP init segment) can be
+        // completely downloaded before the socket queue gets its first send
+        // callback. Do not close before draining the reader: doing so aborts
+        // the loopback response and AVPlayer reports NSURLErrorNetworkConnectionLost.
+        if ( mTask.isDone ) {
+            [self _close];
+        }
         return;
     }
     
