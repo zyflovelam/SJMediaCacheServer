@@ -47,15 +47,7 @@
         _server.onListen = ^(uint16_t port) {
             __strong typeof(_self) self = _self;
             if ( self == nil ) return;
-            // Get device IP address for AirPlay support
-            NSString *deviceIP = @"127.0.0.1"; // Default to localhost
-            if (self->_enableAirPlaySupport) {
-                NSString *localIP = [MCSNetworkUtils getLocalIPAddress];
-                if (localIP) {
-                    deviceIP = localIP;
-                }
-            }
-            MCSURL.shared.serverURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://%@:%hu", deviceIP, port]];
+            MCSURL.shared.serverURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://127.0.0.1:%hu", port]];
         };
 
         self.resolveAssetIdentifier = ^NSString * _Nonnull(NSURL * _Nonnull URL) {

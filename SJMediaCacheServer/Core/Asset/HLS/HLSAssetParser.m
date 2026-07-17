@@ -287,17 +287,9 @@ static NSString *const HLS_CTX_LAST_INIT_END = @"HLS_CTX_LAST_INIT_END";
 
 - (NSString *)hls_restoreOriginalUrl:(NSURL *)resourceURL {
     if ( [self containsString:@"://"] ) {
-        // Check for localhost and device IP addresses
-        NSString *localhost = @"http://localhost";
-        NSString *deviceIP = [MCSNetworkUtils getLocalIPAddress];
-
-        if ( [self hasPrefix:localhost] ) {
-            return [NSURL URLWithString:[self substringFromIndex:localhost.length] relativeToURL:resourceURL].absoluteString;
-        }
-
-        // Also check for device IP address
-        if (deviceIP && [self hasPrefix:[NSString stringWithFormat:@"http://%@", deviceIP]]) {
-            return [NSURL URLWithString:[self substringFromIndex:(deviceIP.length + 7)] relativeToURL:resourceURL].absoluteString;
+        NSString *loopback = @"http://127.0.0.1";
+        if ( [self hasPrefix:loopback] ) {
+            return [NSURL URLWithString:[self substringFromIndex:loopback.length] relativeToURL:resourceURL].absoluteString;
         }
 
         return self;

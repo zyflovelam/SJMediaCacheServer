@@ -127,14 +127,7 @@
     @synchronized (self) {
         [self _clearTimer];
 
-        // Get device IP address for AirPlay support
-        NSString *deviceIP = @"127.0.0.1"; // Default to localhost
-        // For AirPlay support, we need to use the device's actual IP address
-        NSString *localIP = [MCSNetworkUtils getLocalIPAddress];
-        if (localIP) {
-            deviceIP = localIP;
-        }
-        NSURL *reqURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://%@:%hu", deviceIP, port]];
+        NSURL *reqURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://127.0.0.1:%hu", port]];
         __weak typeof(self) _self = self;
         mTimer = [MCTimer.alloc initWithQueue:dispatch_get_global_queue(0, 0) start:mReqInterval interval:mReqInterval repeats:YES block:^(MCTimer *timer) {
             __strong typeof(_self) self = _self;
